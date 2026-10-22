@@ -20,3 +20,21 @@ class SystemStatusV1Tests(TestCase):
         self.assertEqual(res.status_code, 200)
         for field in LEAKY_FIELDS:
             self.assertIn(field, res.json())
+
+
+class SystemStatusV2Tests(TestCase):
+    """Verifica la corrección: v2 es público pero no filtra nada."""
+
+    def test_v2_is_public_and_healthy(self):
+        res = self.client.get(V2)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.json(), {'status': 'ok'})
+
+    def test_v2_does_not_leak_configuration(self):
+        body = self.client.get(V2).json()
+        for field in LEAKY_FIELDS:
+            self.assertNotIn(field, body)
+
+    @override_settings(ENABLE_VULNERABLE_API=False)
+    def test_v2_available_even_with_flag_off(self):
+        self.assertEqual(self.client.get(V2).status_code, 200)
