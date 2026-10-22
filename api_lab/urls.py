@@ -22,6 +22,8 @@ v1_patterns = [
 v2_patterns = [
     path('system/status/', views_v2.system_status, name='system-status'),
     path('system/info/', views_v2.system_info, name='system-info'),
+    path('incidents/', views_v2.incident_list, name='incident-list'),
+    path('incidents/<int:pk>/', views_v2.incident_detail, name='incident-detail'),
 ]
 
 urlpatterns = [

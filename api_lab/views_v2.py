@@ -4,11 +4,14 @@ api_lab/views_v2.py
 ENDPOINTS CORREGIDOS - comparar cada vista con su par en views_v1.py.
 """
 from django.db import DatabaseError, connection
+from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 
+from .models import Incident
+from .serializers import IncidentSerializer
 from .system import admin_details
 
 
@@ -46,3 +49,29 @@ def system_info(request):
     Usuario sin rol -> 403. Sin token -> 401.
     """
     return Response(admin_details())
+
+
+# ---------------------------------------------------------------------------
+# FIX - OWASP API1:2023 Broken Object Level Authorization (BOLA)
+# Un único punto define "qué objetos puede ver este usuario" y TODAS las
+# vistas parten de ahí (complete mediation, Sesión 2). Si mañana se agrega
+# PATCH o DELETE, heredan el mismo filtro.
+# ---------------------------------------------------------------------------
+def incidents_for(user):
+    """Conjunto de incidentes al que el usuario tiene acceso."""
+    return Incident.objects.filter(owner=user)
+
+
+@api_view(['GET'])
+def incident_list(request):
+    return Response(IncidentSerializer(incidents_for(request.user), many=True).data)
+
+
+@api_view(['GET'])
+def incident_detail(request, pk):
+    """
+    CORREGIDO: el objeto se busca dentro del conjunto del usuario.
+    Un incidente ajeno responde 404 (no 403): no confirmamos que existe.
+    """
+    incident = get_object_or_404(incidents_for(request.user), pk=pk)   # BIEN
+    return Response(IncidentSerializer(incident).data)
