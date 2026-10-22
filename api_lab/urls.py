@@ -13,6 +13,7 @@ from . import views_v1
 # Endpoints VULNERABLES: cada vista lleva @vulnerable_endpoint
 v1_patterns = [
     path('system/status/', views_v1.system_status, name='system-status'),
+    path('system/info/', views_v1.system_info, name='system-info'),
 ]
 
 # Endpoints CORREGIDOS

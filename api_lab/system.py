@@ -23,3 +23,27 @@ def runtime_details():
         'hostname': platform.node(),
         'database': {'engine': db['ENGINE'], 'name': str(db['NAME'])},
     }
+
+
+def admin_details():
+    """
+    Información administrativa: configuración y cuentas privilegiadas.
+    Legítima para un administrador; peligrosa en cualquier otra mano.
+    Nota: aun para admins NO incluye secretos (SECRET_KEY, variables de entorno).
+    """
+    from django.contrib.auth.models import User
+
+    staff = User.objects.filter(is_staff=True).order_by('username')
+    return {
+        **runtime_details(),
+        'installed_apps': settings.INSTALLED_APPS,
+        'middleware': settings.MIDDLEWARE,
+        'users': {
+            'total': User.objects.count(),
+            'staff': [
+                {'username': u.username,
+                 'last_login': u.last_login.isoformat() if u.last_login else None}
+                for u in staff
+            ],
+        },
+    }

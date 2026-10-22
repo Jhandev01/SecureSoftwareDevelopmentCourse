@@ -9,11 +9,11 @@ import os
 
 from django.conf import settings
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from .flags import vulnerable_endpoint
-from .system import runtime_details
+from .system import admin_details, runtime_details
 
 
 # ---------------------------------------------------------------------------
@@ -39,3 +39,20 @@ def system_status(request):
         'secret_key': settings.SECRET_KEY,                   # MUY MAL: secreto
         'environment_variables': sorted(os.environ.keys()),  # MAL: servicios usados
     })
+
+
+# ---------------------------------------------------------------------------
+# VULN - OWASP API5:2023 Broken Function Level Authorization (BFLA)
+# Función administrativa que solo verifica QUIÉN eres (autenticación) pero no
+# QUÉ puedes hacer (autorización). Cualquier usuario con token -bob, por
+# ejemplo- obtiene la lista de administradores y la configuración interna.
+# ---------------------------------------------------------------------------
+@vulnerable_endpoint
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])   # MAL: autenticado no es autorizado
+def system_info(request):
+    """
+    VULNERABLE: falta el control de rol.
+    Fix (ver v2): exigir rol de administrador (IsAdminUser).
+    """
+    return Response(admin_details())
