@@ -17,6 +17,21 @@ from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand, CommandError
 from rest_framework.authtoken.models import Token
 
+from api_lab.models import Incident
+
+LAB_INCIDENTS = [
+    # (owner, title, description, severity)
+    ('alice', 'Credenciales de BD en logs de la app',
+     'El log de errores imprime la cadena de conexión completa con usuario y password.',
+     'critical'),
+    ('alice', 'Certificado TLS del portal vence en 10 días',
+     'portal.empresa.local usa un certificado que expira pronto.', 'medium'),
+    ('bob', 'Puerto 22 abierto en servidor de pruebas',
+     'SSH expuesto a internet en el servidor de QA.', 'high'),
+    ('profe', 'Revisión trimestral de accesos pendiente',
+     'Falta revisar cuentas inactivas de exalumnos en el repositorio.', 'low'),
+]
+
 LAB_USERS = [
     # (username, email, is_staff)
     ('alice', 'alice@lab.local', False),
@@ -56,4 +71,10 @@ class Command(BaseCommand):
 
     def seed_data(self):
         """Datos de ejemplo de cada endpoint del laboratorio."""
-        # Se completa en el paso C3 (incidentes).
+        self.stdout.write(self.style.MIGRATE_HEADING('Incidentes'))
+        for owner, title, description, severity in LAB_INCIDENTS:
+            incident, _ = Incident.objects.get_or_create(
+                owner=User.objects.get(username=owner), title=title,
+                defaults={'description': description, 'severity': severity},
+            )
+            self.stdout.write(f'  #{incident.pk:<3} {owner:<6} {title}')
