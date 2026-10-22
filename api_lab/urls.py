@@ -21,6 +21,7 @@ v1_patterns = [
 # Endpoints CORREGIDOS
 v2_patterns = [
     path('system/status/', views_v2.system_status, name='system-status'),
+    path('system/info/', views_v2.system_info, name='system-info'),
 ]
 
 urlpatterns = [
